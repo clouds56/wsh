@@ -1,0 +1,20 @@
+{
+  "name": "gosh",
+  "version": "0.1",
+  "authors": [
+    "Clouds <Clouds.Flowing@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.5",
+    "jquery.terminal": "~0.8.8",
+    "jquery": "~2.1.4"
+  }
+}
