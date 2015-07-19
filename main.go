@@ -40,30 +40,28 @@ func server() {
 	log.Fatal(http.ListenAndServe(":8443", Log(http.DefaultServeMux)))
 }
 
-func eval(line string) {
-	fmt.Printf("eval(\"%s\") => ", line)
+func parse(cmd string) (h string, l []string, s string) {
 	r := regexp.MustCompile(`\S+`)
-	l := r.FindAllString(line, -1)
+	l = r.FindAllString(cmd, -1)
 	var buf bytes.Buffer
-	fmt.Println(l)
-	for _, s := range l {
-		buf.WriteString("<span>" + s + "</span> ")
+	for _, x := range l {
+		buf.WriteString("<span>" + x + "</span> ")
 	}
-	fmt.Println(buf.String())
+	s = buf.String()
 
 	if len(l) < 1 {
 		fmt.Printf("len(l) < 1")
-		return
+		return "", []string{}, ""
 	}
 
-	h := l[0]
+	h = l[0]
 	l = l[1:len(l)]
+	return
+}
 
-	out, err := exec.Command(h,l...).Output()
-	if err != nil {
-		fmt.Printf("%s", err)
-	}
-	fmt.Printf("%q\n", out)
+func eval(h string, l []string) (out []byte, err error) {
+	out, err = exec.Command(h,l...).Output()
+	return
 }
 
 func console() {
@@ -71,7 +69,11 @@ func console() {
 	for {
 		ln, _, err := bio.ReadLine()
 		check(err)
-		eval(string(ln))
+		h, l, s := parse(string(ln))
+		fmt.Printf("eval(\"%s\") => %q\n", ln, s)
+		out, err := eval(h, l)
+		fmt.Printf("%q\n", out)
+		fmt.Printf("%s\n", err)
 	}
 }
 
