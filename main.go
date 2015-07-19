@@ -9,6 +9,8 @@ import (
 	"bufio"
 	"os"
 	"regexp"
+	"bytes"
+	"os/exec"
 )
 
 func check(e error) {
@@ -39,13 +41,34 @@ func server() {
 func eval(line string) {
 	fmt.Printf("eval(\"%s\") => ", line)
 	r := regexp.MustCompile(`\S+`)
-	fmt.Println(r.FindAllString(line, -1))
+	l := r.FindAllString(line, -1)
+	var buf bytes.Buffer
+	fmt.Println(l)
+	for _, s := range l {
+		buf.WriteString("<span>" + s + "</span> ")
+	}
+	fmt.Println(buf.String())
+
+	if len(l) < 1 {
+		fmt.Printf("len(l) < 1")
+		return
+	}
+
+	h := l[0]
+	l = l[1:len(l)]
+
+	out, err := exec.Command(h,l...).Output()
+	if err != nil {
+		fmt.Printf("%s", err)
+	}
+	fmt.Printf("%q\n", out)
 }
 
 func console() {
 	bio := bufio.NewReader(os.Stdin)
 	for {
-		ln, _, _ := bio.ReadLine()
+		ln, _, err := bio.ReadLine()
+		check(err)
 		eval(string(ln))
 	}
 }
