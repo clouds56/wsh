@@ -29,11 +29,13 @@ func Log(handler http.Handler) http.Handler {
 func server() {
 	dat, err := ioutil.ReadFile("terminal.html")
 	check(err)
-	fmt.Print(string(dat))
+	//fmt.Print(string(dat))
 
 	http.HandleFunc("/term/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(dat))
 	})
+
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("."))))
 
 	log.Fatal(http.ListenAndServe(":8443", Log(http.DefaultServeMux)))
 }
@@ -88,7 +90,7 @@ func main() {
 		console()
 	}()
 
-	fmt.Print("Hello world")
+	fmt.Println("Listening at localhost:8443")
 
 	wg.Wait()
 }
