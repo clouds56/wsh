@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"bytes"
 	"os/exec"
+	"time"
+	"encoding/json"
 )
 
 func check(e error) {
@@ -19,11 +21,68 @@ func check(e error) {
 	}
 }
 
+type statusWriter struct {
+	http.ResponseWriter
+	status int
+	length int
+}
+
+func (w *statusWriter) WriteHeader(status int) {
+	w.status = status
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *statusWriter) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = 200
+	}
+	w.length = len(b)
+	return w.ResponseWriter.Write(b)
+}
+
+func WriteLog(handle http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+		url := request.URL.Path
+		if request.URL.RawQuery != "" {
+			url += "?" + request.URL.RawQuery
+		}
+		start := time.Now()
+		writer := statusWriter{w, 0, 0}
+		handle.ServeHTTP(&writer, request)
+		end := time.Now()
+		latency := end.Sub(start)
+		statusCode := writer.status
+		length := writer.length
+		fmt.Printf("%v %s \"%s %s %s\" %d %d %v\n",
+			end.Format("2006-01-02 15:04:05"),
+			request.RemoteAddr,
+			request.Method,
+			url,
+			request.Proto,
+			statusCode,
+			length,
+			latency)
+	}
+}
+
 func Log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
+		log.Printf("%s %s %s %q", r.RemoteAddr, r.Method, r.URL, r.Body)
 		handler.ServeHTTP(w, r)
 	})
+}
+
+func repl(w http.ResponseWriter, r *http.Request) {
+	var v map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&v)
+	if err != nil {
+		// handle error
+	}
+	log.Println("%v",v)
+	log.Println(v["method"])
+	if v["method"] == "system.describe" {
+		
+	}
 }
 
 func server() {
@@ -35,9 +94,11 @@ func server() {
 		fmt.Fprint(w, string(dat))
 	})
 
+	http.HandleFunc("/repl/", repl)
+
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("."))))
 
-	log.Fatal(http.ListenAndServe(":8443", Log(http.DefaultServeMux)))
+	log.Fatal(http.ListenAndServe(":8443", WriteLog(http.DefaultServeMux)))
 }
 
 func parse(cmd string) (h string, l []string, s string) {
