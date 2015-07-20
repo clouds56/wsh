@@ -72,17 +72,42 @@ func Log(handler http.Handler) http.Handler {
 	})
 }
 
+type RpcRequest struct {
+	Jsonrpc string
+	Id int
+	Method string
+	Params []string
+}
+
 func repl(w http.ResponseWriter, r *http.Request) {
-	var v map[string]interface{}
-	err := json.NewDecoder(r.Body).Decode(&v)
+	var v RpcRequest
+	t := map[string]interface{}{}
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		// handle error
+		fmt.Println(err)
 	}
-	log.Println("%v",v)
-	log.Println(v["method"])
-	if v["method"] == "system.describe" {
-		
+	fmt.Println(string(body))
+	err = json.Unmarshal(body, &v)
+	if err != nil {
+		fmt.Println(err)
 	}
+	log.Printf("%+v\n",v)
+	log.Println(v.Method)
+	t["jsonrpc"] = v.Jsonrpc
+	t["id"] = v.Id
+	if v.Method == "system.describe" {
+		t["result"] = "gosh v0.2"
+	} else {
+		out, err := eval(v.Method, v.Params)
+		fmt.Printf("%q => %s\n", out, err)
+		t["result"] = string(out)
+	}
+	s, err := json.Marshal(t)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(s))
+	fmt.Fprint(w, string(s))
 }
 
 func server() {
