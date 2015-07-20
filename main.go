@@ -1,18 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"log"
-	"io/ioutil"
-	"sync"
 	"bufio"
-	"os"
-	"regexp"
 	"bytes"
-	"os/exec"
-	"time"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"os/exec"
+	"regexp"
+	"sync"
+	"time"
 )
 
 func check(e error) {
@@ -74,9 +74,9 @@ func Log(handler http.Handler) http.Handler {
 
 type RpcRequest struct {
 	Jsonrpc string
-	Id int
-	Method string
-	Params []string
+	Id      int
+	Method  string
+	Params  []string
 }
 
 func repl(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +91,7 @@ func repl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	log.Printf("%+v\n",v)
+	log.Printf("%+v\n", v)
 	log.Println(v.Method)
 	t["jsonrpc"] = v.Jsonrpc
 	t["id"] = v.Id
@@ -146,7 +146,7 @@ func parse(cmd string) (h string, l []string, s string) {
 }
 
 func eval(h string, l []string) (out []byte, err error) {
-	out, err = exec.Command(h,l...).Output()
+	out, err = exec.Command(h, l...).Output()
 	return
 }
 
