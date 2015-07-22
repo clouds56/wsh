@@ -76,29 +76,23 @@ type RpcRequest struct {
 	Jsonrpc string
 	Id      int
 	Method  string
-	Params  []string
+	Params  string
 }
 
 func repl(w http.ResponseWriter, r *http.Request) {
-	var v RpcRequest
+	r.ParseForm()
+	fmt.Println(r.Form)
 	t := map[string]interface{}{}
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(body))
-	err = json.Unmarshal(body, &v)
-	if err != nil {
-		fmt.Println(err)
-	}
-	log.Printf("%+v\n", v)
-	log.Println(v.Method)
-	t["jsonrpc"] = v.Jsonrpc
-	t["id"] = v.Id
-	if v.Method == "system.describe" {
+	log.Println(r.PostFormValue("method"))
+	t["jsonrpc"] = r.PostFormValue("jsonrpc")
+	t["id"] = r.PostFormValue("id")
+	method := r.PostFormValue("method")
+	if method == "system.describe" {
 		t["result"] = "gosh v0.2"
-	} else {
-		out, err := eval(v.Method, v.Params)
+	} else if method == "cmd" {
+		h, l, s := parse(r.PostFormValue("params"))
+		fmt.Println(s)
+		out, err := eval(h, l)
 		fmt.Printf("%q => %s\n", out, err)
 		t["result"] = string(out)
 	}

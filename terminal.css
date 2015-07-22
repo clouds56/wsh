@@ -1,0 +1,22 @@
+.terminal {
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    font-family: FreeMono, monospace;
+    color: #aaa;
+    background-color: #000;
+    font-size: 12px;
+    line-height: 14px;
+  }
+
+.term-input::before {
+  content: "In : "
+}
+
+.term-output::before {
+  content: ""
+}
+
+#term-now::before {
+  content: "$ "
+}
